@@ -1,0 +1,9 @@
+{
+  "name": "blueprint-mcp",
+  "description": "Auto-detect project tech stack and generate a custom MCP server",
+  "version": "1.0.0",
+  "author": {
+    "name": "Jeonhui Lee"
+  },
+  "skills": "./commands/"
+}

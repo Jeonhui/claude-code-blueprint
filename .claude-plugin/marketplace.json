@@ -1,0 +1,40 @@
+{
+  "name": "claude-code-blueprint",
+  "owner": {
+    "name": "Jeonhui Lee"
+  },
+  "metadata": {
+    "description": "AI-Native environment optimization plugins for Claude Code",
+    "version": "1.0.0",
+    "pluginRoot": "./plugins"
+  },
+  "plugins": [
+    {
+      "name": "blueprint",
+      "source": "./blueprint",
+      "description": ".claude/ environment management — project structure initialization, skill/rule injection, and custom MCP server template generation",
+      "version": "1.0.0",
+      "author": {
+        "name": "Jeonhui Lee"
+      }
+    },
+    {
+      "name": "blueprint-mcp",
+      "source": "./blueprint-mcp",
+      "description": "Automated project tech stack analysis and custom MCP server code generation",
+      "version": "1.0.0",
+      "author": {
+        "name": "Jeonhui Lee"
+      }
+    },
+    {
+      "name": "blueprint-audit",
+      "source": "./blueprint-audit",
+      "description": "Quality audit framework — structured project review, autonomous fix, and markdown-based backlog/archive/ledger management",
+      "version": "1.0.0",
+      "author": {
+        "name": "Jeonhui Lee"
+      }
+    }
+  ]
+}

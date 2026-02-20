@@ -1,0 +1,12 @@
+{
+  "name": "claude-code-blueprint",
+  "version": "1.0.0",
+  "description": "AI-Native environment optimization plugin for Claude Code",
+  "keywords": [
+    "claude-code",
+    "mcp",
+    "blueprint",
+    "ai-native"
+  ],
+  "license": "MIT"
+}
