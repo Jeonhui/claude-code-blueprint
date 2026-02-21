@@ -1,7 +1,7 @@
 {
   "name": "blueprint",
   "description": "Manage .claude/ environment — initialize project structure, inject skills/rules, and generate custom MCP server templates",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": {
     "name": "Jeonhui Lee"
   },

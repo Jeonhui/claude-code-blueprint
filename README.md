@@ -4,7 +4,7 @@
 
 **Give every AI coding agent full context about your project — automatically.**
 
-[![Version](https://img.shields.io/badge/version-1.0.0-0969da?style=flat-square)](https://github.com/Jeonhui/claude-code-blueprint)
+[![Version](https://img.shields.io/badge/version-1.0.1-0969da?style=flat-square)](https://github.com/Jeonhui/claude-code-blueprint)
 [![License](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)](./LICENSE)
 [![MCP](https://img.shields.io/badge/MCP-compatible-f97316?style=flat-square)](https://modelcontextprotocol.io/)
 
@@ -14,7 +14,20 @@
 
 </div>
 
-**Claude Code Blueprint (CCB)** scans your project, detects your tech stack, and generates the configuration files that AI coding agents need — `CLAUDE.md`, coding rules, agent definitions, hooks, commands, and cross-agent exports — all managed from a single `.claude/` directory.
+## What is Claude Code Blueprint?
+
+AI coding agents (Claude Code, GitHub Copilot, OpenAI Codex, Google Gemini) work best when they deeply understand your project — its conventions, architecture, tech stack, and tooling. But maintaining that context manually is tedious, error-prone, and has to be repeated for every agent.
+
+**Claude Code Blueprint (CCB)** treats AI context as infrastructure. One command scans your project and generates everything AI agents need to work effectively — managed from a single `.claude/` directory.
+
+### What Makes CCB Different
+
+- **Markdown-native** — No database, no build step. All config is plain markdown — readable, diffable, version-controllable.
+- **Write once, run on every agent** — Define context once in `.claude/`, export to Claude, Codex, Gemini, and Copilot with one command.
+- **Composable knowledge** — Skills, rules, agents, commands, and hooks as independent blocks. Mix, match, swap freely.
+- **Role Specification Protocol** — Audit commands are generic executors. Swap the agent file → behavior changes entirely.
+- **Zero intrusion** — Everything in `.claude/`. Delete the folder to fully revert. Source code untouched.
+- **Auto-detect + manual override** — Scans your stack automatically, but every generated file is hand-editable.
 
 ```mermaid
 block-beta
@@ -53,6 +66,40 @@ block-beta
 
 ---
 
+## Key Concepts
+
+CCB organizes AI context into composable building blocks inside `.claude/`:
+
+| Concept | Location | Description |
+|:---|:---|:---|
+| **Skills** | `.claude/skills/` | Domain knowledge packages — reusable sets of conventions and best practices (e.g., REST API design, strict TypeScript rules) |
+| **Rules** | `.claude/rules/` | Path-scoped coding standards — automatically applied when the agent works on matching files |
+| **Agents** | `.claude/agents/` | Specialized role definitions — YAML frontmatter + markdown body that define what an agent focuses on and how it behaves |
+| **Commands** | `.claude/commands/` | Custom slash commands — prompt templates you can invoke with `/command-name` |
+| **Hooks** | `.claude/settings.json` | Event-driven shell commands — triggered on tool use events (PreToolUse, PostToolUse, etc.) |
+| **MCP Servers** | `.claude/mcp-internal/` | Project-specific Model Context Protocol servers — generated from your tech stack |
+
+These building blocks are independent and composable. Install only what you need, customize freely, and export to other AI agents.
+
+### Three Plugins, One System
+
+| Plugin | Role | When to use |
+|:---|:---|:---|
+| **blueprint** | Environment management | Always — this is the core that sets up `.claude/` and manages all configuration |
+| **blueprint-mcp** | MCP server generation | When you want auto-generated MCP servers tailored to your frameworks and databases |
+| **blueprint-audit** | Quality audit | When you want agent-driven code review with structured issue tracking and autonomous fixes |
+
+Each plugin is installed independently and works standalone, but they share the same `.claude/` directory and complement each other.
+
+---
+
+## Requirements
+
+- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) CLI installed and authenticated
+- Plugin support enabled (Claude Code v1.0+)
+
+---
+
 ## Quick Start
 
 ```bash
@@ -79,6 +126,8 @@ block-beta
 ## blueprint
 
 > Core environment manager — initializes `.claude/`, generates project context, and manages all Claude Code configuration.
+
+The blueprint plugin is the foundation of CCB. It analyzes your codebase to generate a comprehensive `CLAUDE.md` that captures your project's tech stack, directory layout, coding conventions, and available scripts. It also provides a full management layer for skills, agents, commands, hooks, and cross-agent exports — letting you build a tailored AI development environment through simple slash commands.
 
 ### Setup & Diagnostics
 
@@ -146,6 +195,8 @@ block-beta
 
 > Analyzes your project tech stack and generates a custom MCP server tailored to your frameworks, databases, and API patterns.
 
+The blueprint-mcp plugin reads your `package.json`, config files, and source directory structure to identify which frameworks, ORMs, API patterns, and infrastructure tools you use. It then generates a fully functional MCP server with tools specific to your stack — for example, Prisma schema introspection, Next.js route listing, or GraphQL query helpers. The generated server is placed in `.claude/mcp-internal/` and auto-registered in `.mcp.json`.
+
 | Command | Description |
 |:---|:---|
 | `/blueprint-mcp:analyze` | Detect frameworks, databases, API patterns, and directory structure |
@@ -171,6 +222,8 @@ block-beta
 ## blueprint-audit
 
 > Markdown-based quality audit framework — agent personas scan your code, create structured issues, and apply autonomous fixes, tracked in a human-readable backlog/archive/ledger system.
+
+The blueprint-audit plugin brings structured code quality management to your project. Instead of relying on a single linter or review tool, it uses **role-specialized agents** — each with its own focus area, checklist, and severity criteria — to scan your code and produce actionable issues. Issues are tracked entirely in markdown files (no external database), making them easy to read, diff, and version-control. Optimizer agents can then autonomously fix issues, with all changes logged in a ledger for full traceability.
 
 ### How It Works
 
@@ -296,6 +349,7 @@ Display the quality audit dashboard.
 /blueprint-audit:agent-add -n security -t auditor        # create auditor → audit-security.md
 /blueprint-audit:agent-add -n perf -t auditor --minimal  # quick create with defaults
 /blueprint-audit:agent-add -n opt -t optimizer --from ./spec.md  # import from file
+/blueprint-audit:agent-add -n a11y -t auditor --custom   # write your own full spec body
 ```
 
 #### Instructions (for cross-agent use)
@@ -417,6 +471,40 @@ graph TD
 ```
 
 > Delete `.claude/` to revert everything. CCB never modifies your source code.
+
+---
+
+## Extending CCB
+
+CCB is designed to be customized. Every component can be added, modified, or removed without affecting others.
+
+**Add domain knowledge** — install a built-in skill or create your own in `.claude/skills/`:
+```bash
+/blueprint:skill-add rest-api-guide        # install built-in skill
+/blueprint:skill-add typescript-strict     # install another
+```
+
+**Create specialized agents** — define custom agent roles for your team's needs:
+```bash
+/blueprint:agent-create                    # interactive agent builder
+/blueprint:agent-scaffold                  # full Anthropic Agent SDK project
+```
+
+**Automate workflows with hooks** — run shell commands on tool use events:
+```bash
+/blueprint:hook-add                        # add pre/post tool use hooks
+```
+
+**Build project-specific tools** — generate MCP servers from your stack:
+```bash
+/blueprint:tool-generate                   # create MCP server template
+/blueprint:tool-link                       # register in .mcp.json
+```
+
+**Share context with other AI agents** — export your `.claude/` knowledge:
+```bash
+/blueprint:export --target all             # generate AGENTS.md, GEMINI.md, copilot-instructions.md
+```
 
 ---
 

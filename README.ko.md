@@ -4,7 +4,7 @@
 
 **모든 AI 코딩 에이전트에게 프로젝트 컨텍스트를 자동으로 제공합니다.**
 
-[![Version](https://img.shields.io/badge/version-1.0.0-0969da?style=flat-square)](https://github.com/Jeonhui/claude-code-blueprint)
+[![Version](https://img.shields.io/badge/version-1.0.1-0969da?style=flat-square)](https://github.com/Jeonhui/claude-code-blueprint)
 [![License](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)](./LICENSE)
 [![MCP](https://img.shields.io/badge/MCP-compatible-f97316?style=flat-square)](https://modelcontextprotocol.io/)
 
@@ -14,7 +14,20 @@
 
 </div>
 
-**Claude Code Blueprint (CCB)** 은 프로젝트를 스캔하고, 기술 스택을 감지하며, AI 코딩 에이전트에 필요한 설정 파일을 생성합니다 — `CLAUDE.md`, 코딩 규칙, 에이전트 정의, 훅, 명령어, 크로스 에이전트 내보내기까지 모두 하나의 `.claude/` 디렉토리에서 관리됩니다.
+## Claude Code Blueprint란?
+
+AI 코딩 에이전트(Claude Code, GitHub Copilot, OpenAI Codex, Google Gemini)는 프로젝트의 컨벤션, 아키텍처, 기술 스택, 도구를 깊이 이해할 때 가장 잘 작동합니다. 하지만 이 컨텍스트를 수동으로 관리하는 것은 번거롭고 오류가 발생하기 쉬우며, 에이전트마다 반복해야 합니다.
+
+**Claude Code Blueprint (CCB)** 은 AI 컨텍스트를 인프라로 취급합니다. 한 번의 명령으로 프로젝트를 스캔하고 AI 에이전트가 효과적으로 작업하는 데 필요한 모든 것을 생성합니다 — 하나의 `.claude/` 디렉토리에서 관리됩니다.
+
+### CCB만의 차별점
+
+- **마크다운 네이티브** — DB도, 빌드도 필요 없음. 모든 설정이 순수 마크다운 — 읽기, diff, 버전 관리 가능.
+- **한 번 작성, 모든 에이전트에서 실행** — `.claude/`에 한 번 정의하고 Claude, Codex, Gemini, Copilot으로 한 명령어로 내보내기.
+- **조합 가능한 지식** — 스킬, 규칙, 에이전트, 명령어, 훅이 독립 블록. 자유롭게 조합, 교체 가능.
+- **역할 명세 프로토콜** — 감사 명령은 범용 실행기. 에이전트 파일 교체 → 동작 전체 변경.
+- **제로 침투** — 모든 것이 `.claude/` 안에. 폴더 삭제로 완전 복원. 소스 코드 무변경.
+- **자동 감지 + 수동 오버라이드** — 기술 스택 자동 스캔, 생성된 파일은 언제든 수동 편집 가능.
 
 ```mermaid
 block-beta
@@ -53,6 +66,40 @@ block-beta
 
 ---
 
+## 핵심 개념
+
+CCB는 AI 컨텍스트를 `.claude/` 안의 조합 가능한 빌딩 블록으로 구성합니다:
+
+| 개념 | 위치 | 설명 |
+|:---|:---|:---|
+| **스킬** | `.claude/skills/` | 도메인 지식 패키지 — 재사용 가능한 컨벤션과 모범 사례 모음 (예: REST API 설계, 엄격한 TypeScript 규칙) |
+| **규칙** | `.claude/rules/` | 경로별 코딩 표준 — 에이전트가 해당 파일 작업 시 자동 적용 |
+| **에이전트** | `.claude/agents/` | 전문 역할 정의 — YAML 프론트매터 + 마크다운 본문으로 에이전트의 초점과 동작 방식을 정의 |
+| **명령어** | `.claude/commands/` | 커스텀 슬래시 명령어 — `/command-name`으로 호출 가능한 프롬프트 템플릿 |
+| **훅** | `.claude/settings.json` | 이벤트 기반 셸 명령어 — 도구 사용 이벤트(PreToolUse, PostToolUse 등)에 트리거 |
+| **MCP 서버** | `.claude/mcp-internal/` | 프로젝트 전용 Model Context Protocol 서버 — 기술 스택에서 자동 생성 |
+
+이 빌딩 블록들은 독립적이며 조합 가능합니다. 필요한 것만 설치하고, 자유롭게 커스터마이징하며, 다른 AI 에이전트로 내보낼 수 있습니다.
+
+### 세 플러그인, 하나의 시스템
+
+| 플러그인 | 역할 | 사용 시점 |
+|:---|:---|:---|
+| **blueprint** | 환경 관리 | 항상 — `.claude/` 설정과 모든 구성을 관리하는 핵심 플러그인 |
+| **blueprint-mcp** | MCP 서버 생성 | 프레임워크와 데이터베이스에 맞춤화된 MCP 서버를 자동 생성하고 싶을 때 |
+| **blueprint-audit** | 품질 감사 | 에이전트 기반 코드 리뷰와 구조화된 이슈 추적, 자율 수정이 필요할 때 |
+
+각 플러그인은 독립적으로 설치되며 단독으로 작동하지만, 동일한 `.claude/` 디렉토리를 공유하고 서로 보완합니다.
+
+---
+
+## 요구사항
+
+- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) CLI 설치 및 인증 완료
+- 플러그인 지원 활성화 (Claude Code v1.0+)
+
+---
+
 ## 빠른 시작
 
 ```bash
@@ -79,6 +126,8 @@ block-beta
 ## blueprint
 
 > 핵심 환경 관리자 — `.claude/` 초기화, 프로젝트 컨텍스트 생성, Claude Code 설정 전반을 관리합니다.
+
+blueprint 플러그인은 CCB의 기반입니다. 코드베이스를 분석하여 프로젝트의 기술 스택, 디렉토리 구조, 코딩 컨벤션, 사용 가능한 스크립트를 캡처하는 종합적인 `CLAUDE.md`를 생성합니다. 또한 스킬, 에이전트, 명령어, 훅, 크로스 에이전트 내보내기를 위한 전체 관리 레이어를 제공하여 간단한 슬래시 명령어로 맞춤형 AI 개발 환경을 구축할 수 있습니다.
 
 ### 설정 및 진단
 
@@ -146,6 +195,8 @@ block-beta
 
 > 프로젝트 기술 스택을 분석하고, 프레임워크/DB/API 패턴에 맞춤화된 MCP 서버를 생성합니다.
 
+blueprint-mcp 플러그인은 `package.json`, 설정 파일, 소스 디렉토리 구조를 읽어 사용 중인 프레임워크, ORM, API 패턴, 인프라 도구를 식별합니다. 그런 다음 스택에 특화된 도구가 포함된 완전히 작동하는 MCP 서버를 생성합니다 — 예를 들어 Prisma 스키마 조회, Next.js 라우트 목록, GraphQL 쿼리 헬퍼 등입니다. 생성된 서버는 `.claude/mcp-internal/`에 배치되고 `.mcp.json`에 자동 등록됩니다.
+
 | 명령어 | 설명 |
 |:---|:---|
 | `/blueprint-mcp:analyze` | 프레임워크, DB, API 패턴, 디렉토리 구조 감지 |
@@ -171,6 +222,8 @@ block-beta
 ## blueprint-audit
 
 > 마크다운 기반 품질 감사 프레임워크 — 전문 에이전트가 코드를 스캔하고, 구조화된 이슈를 생성하며, 자율적으로 수정합니다. 모든 활동은 백로그/아카이브/원장 시스템으로 추적됩니다.
+
+blueprint-audit 플러그인은 프로젝트에 구조화된 코드 품질 관리를 제공합니다. 단일 린터나 리뷰 도구에 의존하는 대신, **역할 특화 에이전트** — 각각 고유한 초점 영역, 체크리스트, 심각도 기준을 가진 — 를 사용하여 코드를 스캔하고 실행 가능한 이슈를 생성합니다. 이슈는 전적으로 마크다운 파일로 추적되므로(외부 데이터베이스 불필요) 읽기, diff, 버전 관리가 쉽습니다. 수정 에이전트가 이슈를 자율적으로 수정하며, 모든 변경 사항이 원장에 기록되어 완전한 추적성을 보장합니다.
 
 ### 동작 방식
 
@@ -295,6 +348,7 @@ ignore_patterns:
 /blueprint-audit:agent-add -n security -t auditor        # 감사 에이전트 생성 → audit-security.md
 /blueprint-audit:agent-add -n perf -t auditor --minimal  # 기본값으로 빠른 생성
 /blueprint-audit:agent-add -n opt -t optimizer --from ./spec.md  # 파일에서 가져오기
+/blueprint-audit:agent-add -n a11y -t auditor --custom   # 명세 본문 직접 작성
 ```
 
 #### 인스트럭션 (크로스 에이전트용)
@@ -416,6 +470,40 @@ graph TD
 ```
 
 > `.claude/`를 삭제하면 모든 것이 원상복구됩니다. CCB는 소스 코드를 절대 수정하지 않습니다.
+
+---
+
+## CCB 확장하기
+
+CCB는 커스터마이징을 위해 설계되었습니다. 모든 구성 요소를 다른 요소에 영향 없이 추가, 수정, 제거할 수 있습니다.
+
+**도메인 지식 추가** — 내장 스킬 설치 또는 `.claude/skills/`에 직접 생성:
+```bash
+/blueprint:skill-add rest-api-guide        # 내장 스킬 설치
+/blueprint:skill-add typescript-strict     # 추가 설치
+```
+
+**전문 에이전트 생성** — 팀의 요구에 맞는 커스텀 에이전트 역할 정의:
+```bash
+/blueprint:agent-create                    # 대화형 에이전트 빌더
+/blueprint:agent-scaffold                  # Anthropic Agent SDK 프로젝트 생성
+```
+
+**훅으로 워크플로우 자동화** — 도구 사용 이벤트에 셸 명령어 실행:
+```bash
+/blueprint:hook-add                        # pre/post 도구 사용 훅 추가
+```
+
+**프로젝트 전용 도구 구축** — 기술 스택에서 MCP 서버 생성:
+```bash
+/blueprint:tool-generate                   # MCP 서버 템플릿 생성
+/blueprint:tool-link                       # .mcp.json에 등록
+```
+
+**다른 AI 에이전트와 컨텍스트 공유** — `.claude/` 지식을 내보내기:
+```bash
+/blueprint:export --target all             # AGENTS.md, GEMINI.md, copilot-instructions.md 생성
+```
 
 ---
 

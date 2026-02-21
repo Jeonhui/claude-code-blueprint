@@ -10,6 +10,7 @@ Parse from $ARGUMENTS:
 - `--type <auditor|optimizer>` or `-t <type>` (required): Agent type
 - `--from <path>` (optional): Import role spec from an existing markdown file instead of interactive creation
 - `--minimal` (optional): Create with only required fields, skip interactive checklist gathering
+- `--custom` (optional): Let the user write the full agent specification body directly
 
 Do NOT use MCP tools — use native file tools only (Read, Write, Glob, Bash).
 
@@ -136,6 +137,50 @@ Before executing the main logic, perform this initialization check:
 ### Mode C: Minimal creation (`--minimal`)
 1. Ask the user only for the focus area (one line)
 2. Generate a minimal agent file with default checklist items based on the focus area
+
+### Mode D: Custom spec (`--custom`)
+1. Ask the user for:
+   - **Focus area**: One-line description of what this agent focuses on
+2. Generate only the YAML frontmatter based on the agent type:
+
+   **For `auditor` type:**
+   ```yaml
+   ---
+   name: audit-<name>
+   type: auditor
+   focus: "<focus area>"
+   ---
+   ```
+
+   **For `optimizer` type:**
+   ```yaml
+   ---
+   name: audit-<name>
+   type: optimizer
+   focus: "<focus area>"
+   ---
+   ```
+
+3. Then ask the user to write the full agent specification body in markdown.
+   - Present the following guidance to the user:
+     ```
+     Write the agent specification body in markdown.
+     This will be placed after the YAML frontmatter.
+
+     Recommended sections for auditor:
+       # <Name> Auditor — role description
+       ## Review Checklist — items to check
+       ## Severity Criteria — how to rate issues
+       ## Scan Instructions — how to approach the scan
+
+     Recommended sections for optimizer:
+       # <Name> Optimizer — role description
+       ## Optimization Checklist — items to optimize
+       ## Fix Principles — constraints when making changes
+       ## Process — step-by-step execution flow
+     ```
+   - The user provides the full markdown body content.
+4. Combine the generated frontmatter with the user-provided body and write to `.claude/agents/audit-<name>.md`.
 
 ## Report
 
